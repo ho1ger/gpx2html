@@ -157,14 +157,12 @@ def resultsToHTML(results):
 	<body>\n
 	"""
 	for fr in filteredResults:
-
 		fr0 = fr[0].encode('utf8')
 		fr0 = htmlEscaper.htmlEscape(fr0)
 		fr1 = fr[1].encode('utf8')
 		fr1 = htmlEscaper.htmlEscape(fr1)
 		fr2 = fr[2].encode('utf8')
 		fr2 = htmlEscaper.htmlEscape(fr2)
-
 		outputhtml += "<h1>" + fr0 + "</h1>\n"
 		outputhtml += "<p>" + fr1 + "</p>\n"
 		outputhtml += "<p><a href='" + fr2 + "'>Link: " + fr0 + "</a></p>\n"
@@ -172,9 +170,6 @@ def resultsToHTML(results):
 	</body>\n
 	</html>\n
 	"""
-	# to utf8
-	#outputhtml = outputhtml.encode('utf8')
-
 	return outputhtml
 
 # ------------------------------------------------------------
