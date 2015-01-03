@@ -134,7 +134,6 @@ def harvestInformation(waypoints):
 	pos = waypoints[-1:][0] # [-1:] delivers an array with one element, hence we need [0]
 	print "Currently processing position: " + pos[0] + " / " + pos[1]
 	results.extend(retrieveInfo(pos, user, lang))
-
 	return results
 
 
