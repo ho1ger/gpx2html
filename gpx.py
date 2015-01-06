@@ -9,55 +9,44 @@ nearby interesting things, writes short teaser + link to full article to html fi
 Needs:
 * geopy python module: https://pypi.python.org/pypi/geopy/1.7.0
 * login for geonames, get a username here: http://www.geonames.org/login
+
+2015/01/06: better and more stable version for gpx files w/o regexp
 """
 
 # some imports
-from re import compile
 from geopy.distance import vincenty
-from geopy.geocoders import Nominatim
+#from geopy.geocoders import Nominatim # not used at the moment
 from urllib2 import urlopen
-#import xml.dom.minidom as md
-from xml.dom.minidom import parseString
+from xml.dom.minidom import parse, parseString
 import sys
 import htmlEscaper, helpers
 
 # some settings
 delta = 5 #kilometer, not miles
-user = "YOUR USER NAME" # 
+user = "YOUR USERNAME HERE" # 
 lang = "de"
 
 # some code \o/
 
-# extracts the coordinates as tuples from the gpx file, returns an array
-def parseGPX(input):
-	#regexp for finding all the waypoints
-	p = compile('lat="[0-9.-]+" lon="[0-9.-]+"')
-	waypoints = p.findall(input)
+# opens file, extracts lat/lon from trkpts
+def parseGPX(file):
+	dom = parse(file)
 	results = []
-	if len(waypoints) > 0:
-		# go through all found waypoints
-		for waypoint in waypoints:
-			# regexp for cleaning found waypoints
-			p = compile('[0-9.-]+')
-			waypointsClear = p.findall(waypoint)			
-			if (len(waypointsClear) == 2):
-				# adds the x/y coordinates as tuple to the results array
-				results.append((waypointsClear[0], waypointsClear[1]))
-			else:
-				print "Error: cleaning waypoints."
-	else:
-		print "Error: Finding waypoints."
+	for node in dom.getElementsByTagName("trkpt"):	
+		lat = node.attributes["lat"]
+		lon = node.attributes["lon"]
+		results.append((lat.value, lon.value))
 	return results
 
 
 # currently not needed, however neat function
-def reverse(waypoint):
-	location = geolocator.reverse(waypoint[0] + ", " + waypoint[1])
-	loc = location.raw["address"]
-	try:
-		return loc["road"], loc["postcode"], loc["town"], loc["state"], loc["country"]
-	except:
-		return "ERROR"
+# def reverse(waypoint):
+# 	location = geolocator.reverse(waypoint[0] + ", " + waypoint[1])
+# 	loc = location.raw["address"]
+# 	try:
+# 		return loc["road"], loc["postcode"], loc["town"], loc["state"], loc["country"]
+# 	except:
+# 		return "ERROR"
 
 
 # returns true when some waypoint is further away as delta meters from some place
@@ -134,6 +123,7 @@ def harvestInformation(waypoints):
 	pos = waypoints[-1:][0] # [-1:] delivers an array with one element, hence we need [0]
 	print "Currently processing position: " + pos[0] + " / " + pos[1]
 	results.extend(retrieveInfo(pos, user, lang))
+
 	return results
 
 
@@ -156,12 +146,14 @@ def resultsToHTML(results):
 	<body>\n
 	"""
 	for fr in filteredResults:
+
 		fr0 = fr[0].encode('utf8')
 		fr0 = htmlEscaper.htmlEscape(fr0)
 		fr1 = fr[1].encode('utf8')
 		fr1 = htmlEscaper.htmlEscape(fr1)
 		fr2 = fr[2].encode('utf8')
 		fr2 = htmlEscaper.htmlEscape(fr2)
+
 		outputhtml += "<h1>" + fr0 + "</h1>\n"
 		outputhtml += "<p>" + fr1 + "</p>\n"
 		outputhtml += "<p><a href='" + fr2 + "'>Link: " + fr0 + "</a></p>\n"
@@ -169,16 +161,18 @@ def resultsToHTML(results):
 	</body>\n
 	</html>\n
 	"""
+	# to utf8
+	#outputhtml = outputhtml.encode('utf8')
+
 	return outputhtml
 
 # ------------------------------------------------------------
 
 # open the gpx file
 track = sys.argv[1]
-input = helpers.readFile(track)
 
 # get the waypoints as array of (x, y) tuples
-waypoints = parseGPX(input)
+waypoints = parseGPX(track)
 
 # not needed
 #geolocator = Nominatim() 
